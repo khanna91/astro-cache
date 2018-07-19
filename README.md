@@ -6,7 +6,9 @@ redis setup.
 #### ENV VARIABLES
 
 cacheHost // required, default to 127.0.0.1,
+
 cachePort // required, default to 6379
+
 cachePassword // optional
 
 For cluster, give the multiple host comma seperated.
