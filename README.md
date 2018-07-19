@@ -13,7 +13,7 @@ cachePassword // optional
 
 For cluster, give the multiple host comma seperated.
 
-Or you can provide these, configuration in build function
+Or you can provide these, configuration in configure function
 
 **This library will first check env variables, then user provided configuration. If both not found it will
 use default values**
@@ -22,12 +22,12 @@ use default values**
 ```
 const cache = require('astro-cache');
 
-cache.build();
+cache.configure();
 
 OR
 -----
 
-cache.build({
+cache.configure({
   cacheHost: '127.0.0.1',
   cachePort: 6379
 });
@@ -63,11 +63,11 @@ If the item does not exist in the cache, the Closure passed to the remember meth
 result will be placed in the cache with ttl of seconds passed as second argument.
 
 #### Retrieve & Delete
-If you need to retrieve an item from the cache and then delete the item, you may use the pull method. 
+If you need to retrieve an item from the cache and then delete the item, you may use the pop method. 
 Like the get method, null will be returned if the item does not exist in the cache:
 
 ```
-const value = async cache.pull('key');
+const value = async cache.pop('key');
 ```
 
 #### Retrive fields associated with particular key
@@ -93,14 +93,6 @@ The method will return true if the item is actually added to the cache. Otherwis
 
 ```
 const stored = async cache.add('key', value, expiry);
-```
-
-#### Storing Items Forever
-The forever method may be used to store an item in the cache permanently. Since these items will not expire, 
-they must be manually removed from the cache using the forget method:
-
-```
-cache.forever('key', value);
 ```
 
 #### Store Set under particular key

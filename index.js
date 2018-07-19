@@ -17,7 +17,7 @@ const configuration = {
  * This function is used to setup the configuration for cache store
  * @param {*} config
  */
-const build = (config) => {
+const configure = (config) => {
   // Check for env variables first then user configuration
   // set cacheHost
   if (process.env.cacheHost) {
@@ -45,7 +45,14 @@ const build = (config) => {
  * This function is used to run the cache store
  */
 const run = () => {
-  if (configuration.cacheHost.indexOf(',') > 0) {
+  if (configuration.cacheHost.indexOf(',') < 1) {
+    // normal redis setup
+    redisClient = new Redis({
+      port: configuration.cachePort,
+      host: configuration.cacheHost,
+      showFriendlyErrorStack: true
+    });
+  } else {
     // means cluster needs to be setup
     const clusterNodes = [];
     process.env.cacheHost.split(',').forEach((host) => {
@@ -61,13 +68,6 @@ const run = () => {
         }
       }
     );
-  } else {
-    // normal redis setup
-    redisClient = new Redis({
-      port: configuration.cachePort,
-      host: configuration.cacheHost,
-      showFriendlyErrorStack: true
-    });
   }
 
   if (configuration.cachePassword) {
@@ -77,6 +77,9 @@ const run = () => {
   handleDefaultEvents();
 };
 
+/**
+ * This function is used to handle events and console it out
+ */
 const handleDefaultEvents = () => {
   // events/error handling
   redisClient.on('error', (error) => {
@@ -219,7 +222,7 @@ const has = async (key) => {
  * This function is used to retrive the value from cache and afterwards, remove it
  * @param {String} key
  */
-const pull = async (key) => {
+const pop = async (key) => {
   try {
     const result = await get(key);
     if (!_.isNil(result)) {
@@ -271,9 +274,7 @@ const multiput = async (key, data, expiry) => {
   }
 };
 
-const getIoRedis = () => {
-  return redisClient;
-}
+const getIoRedis = () => (redisClient);
 
 module.exports = {
   _client: getIoRedis,
@@ -282,9 +283,9 @@ module.exports = {
   remember,
   destroy,
   has,
-  pull,
+  pop,
   multiget,
   multiput,
-  build,
+  configure,
   run
 };
