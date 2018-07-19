@@ -7,57 +7,99 @@ const Redis = require('ioredis');
 const _ = require('lodash');
 
 let redisClient = {};
+const configuration = {
+  cachePort: 6379,
+  cacheHost: '127.0.0.1',
+  cachePassword: undefined
+};
 
-if (process.env.cacheHost && process.env.cacheHost.indexOf(',') > 0) {
-  // means cluster needs to be setup
-  const clusterNodes = [];
-  process.env.cacheHost.split(',').forEach((host) => {
-    clusterNodes.push({ host, port: process.env.cachePort });
-  });
-  redisClient = new Redis(
-    clusterNodes,
-    {
-      scaleReads: 'slave',
-      enableOfflineQueue: true,
-      redisOptions: {
-        showFriendlyErrorStack: true
+/**
+ * This function is used to setup the configuration for cache store
+ * @param {*} config
+ */
+const build = (config) => {
+  // Check for env variables first then user configuration
+  // set cacheHost
+  if (process.env.cacheHost) {
+    configuration.cacheHost = process.env.cacheHost;
+  } else if (config && config.cacheHost) {
+    configuration.cacheHost = config.cacheHost;
+  }
+
+  // set cachePort
+  if (process.env.cachePort) {
+    configuration.cachePort = process.env.cachePort;
+  } else if (config && config.cachePort) {
+    configuration.cachePort = config.cachePort;
+  }
+
+  // set cachePassword
+  if (process.env.cachePassword) {
+    configuration.cachePassword = process.env.cachePassword;
+  } else if (config && config.cachePassword) {
+    configuration.cachePassword = config.cachePassword;
+  }
+};
+
+/**
+ * This function is used to run the cache store
+ */
+const run = () => {
+  if (configuration.cacheHost.indexOf(',') > 0) {
+    // means cluster needs to be setup
+    const clusterNodes = [];
+    process.env.cacheHost.split(',').forEach((host) => {
+      clusterNodes.push({ host, port: process.env.cachePort });
+    });
+    redisClient = new Redis(
+      clusterNodes,
+      {
+        scaleReads: 'slave',
+        enableOfflineQueue: true,
+        redisOptions: {
+          showFriendlyErrorStack: true
+        }
       }
-    }
-  );
-} else {
-  // normal redis setup
-  redisClient = new Redis({
-    port: process.env.cachePort || 6379,
-    host: process.env.cacheHost || '127.0.0.1',
-    showFriendlyErrorStack: true
+    );
+  } else {
+    // normal redis setup
+    redisClient = new Redis({
+      port: configuration.cachePort,
+      host: configuration.cacheHost,
+      showFriendlyErrorStack: true
+    });
+  }
+
+  if (configuration.cachePassword) {
+    redisClient.auth(process.env.cachePassword);
+  }
+
+  handleDefaultEvents();
+};
+
+const handleDefaultEvents = () => {
+  // events/error handling
+  redisClient.on('error', (error) => {
+    console.log(`Redis throws error ${error}`);
   });
-}
 
-if (process.env.cachePassword) {
-  redisClient.auth(process.env.cachePassword);
-}
+  redisClient.on('connect', () => {
+    console.log('Redis has connected');
+  });
 
-// events/error handling
-redisClient.on('error', (error) => {
-  console.log(`Redis throws error ${error}`);
-});
+  redisClient.on('reconnecting', () => {
+    console.log('Redis has lost connection, it is trying to reconnect');
+  });
 
-redisClient.on('connect', () => {
-  console.log('Redis has connected');
-});
-
-redisClient.on('reconnecting', () => {
-  console.log('Redis has lost connection, it is trying to reconnect');
-});
-
-redisClient.on('ready', () => {
-  console.log('Redis is ready to work hard!');
-});
+  redisClient.on('ready', () => {
+    console.log('Redis is ready to work hard!');
+  });
+};
 
 /**
  * This function is validating the key for checking undefined and null values
  * @param {String} key
- * 
+ *
  * @private
  */
 const validateKey = (key) => {
@@ -69,8 +111,8 @@ const validateKey = (key) => {
 
 /**
  * This function is used to retrive the value from cache
- * @param {String} key 
- * 
+ * @param {String} key
+ *
  * @public
  */
 const get = async (key) => {
@@ -79,12 +121,12 @@ const get = async (key) => {
       return null;
     }
     const result = await redisClient.get(key);
-    if (_.isNull(result)) {
-      return null;
+    if (_.isNil(result)) {
+      return undefined;
     }
     return JSON.parse(result);
   } catch (err) {
-    return null;
+    return undefined;
   }
 };
 
@@ -102,23 +144,23 @@ const remember = async (key, expiry, defaultValue) => {
       return null;
     }
     const result = await get(key);
-    if (_.isNull(result)) {
+    if (_.isNil(result)) {
       throw new Error('Not in cache');
     }
     return result;
   } catch (err) {
-    let result = null;
+    let result;
     if (!_.isNil(defaultValue)) {
       if (_.isFunction(defaultValue)) {
         try {
           result = await defaultValue();
         } catch (error) {
-          result = null;
+          result = undefined;
         }
       } else {
         result = defaultValue;
       }
-      if (!_.isNil(expiry) && !_.isNull(result)) {
+      if (!_.isNil(expiry) && !_.isNil(result)) {
         put(key, result, expiry);
       }
     }
@@ -150,17 +192,10 @@ const put = async (key, value, expiry) => {
 };
 
 /**
- * This function is used to store the value in cache permanently
- * @param {String} key 
- * @param {Any} value 
- */
-const forever = (key, value) => (put(key, value));
-
-/**
  * This function is used to remove the key from cache
  * @param {String} key
  */
-const forget = (key) => {
+const destroy = (key) => {
   redisClient.del(key);
 };
 
@@ -187,30 +222,17 @@ const has = async (key) => {
 const pull = async (key) => {
   try {
     const result = await get(key);
-    if (!_.isNull(result)) {
-      forget(key);
+    if (!_.isNil(result)) {
+      destroy(key);
     }
     return result;
   } catch (err) {
-    return null;
+    return undefined;
   }
 };
 
 /**
- * This function will only add value in cache, if the key doesn't exist already
- * @param {String} key
- * @param {Any} value
- * @param {Number} expiry
- */
-const add = async (key, value, expiry) => {
-  if (await has(key)) {
-    return false;
-  }
-  return put(key, value, expiry);
-};
-
-/**
- * This function is used to retrieves the values associated 
+ * This function is used to retrieves the values associated
  * with the specified fields in the hash stored at key
  * @param {String} set
  * @param {Array<String>} keys
@@ -223,12 +245,12 @@ const multiget = async (set, keys) => {
     const result = await redisClient.hmget(set, keys);
     return result;
   } catch (err) {
-    return {};
+    return undefined;
   }
 };
 
 /**
- * This function is used to store specified fields to their 
+ * This function is used to store specified fields to their
  * respective values in the hash stored at key
  * @param {String} key
  * @param {Any} data
@@ -249,16 +271,20 @@ const multiput = async (key, data, expiry) => {
   }
 };
 
+const getIoRedis = () => {
+  return redisClient;
+}
+
 module.exports = {
-  _client: redisClient,
+  _client: getIoRedis,
   get,
   put,
   remember,
-  forget,
-  forever,
+  destroy,
   has,
   pull,
-  add,
   multiget,
-  multiput
+  multiput,
+  build,
+  run
 };

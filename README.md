@@ -13,8 +13,27 @@ cachePassword // optional
 
 For cluster, give the multiple host comma seperated.
 
+Or you can provide these, configuration in build function
+
+**This library will first check env variables, then user provided configuration. If both not found it will
+use default values**
+
 ## Cache Usage
+```
 const cache = require('astro-cache');
+
+cache.build();
+
+OR
+-----
+
+cache.build({
+  cacheHost: '127.0.0.1',
+  cachePort: 6379
+});
+
+cache.run();
+```
 
 ### Retrieving Items From The Cache
 The get method on the Cache is used to retrieve items from the cache.
@@ -61,9 +80,10 @@ const values = async cache.multiget('key', [...fieldKey (String)]);
 ### Storing data in cache
 You may use the put method to store items in the cache. When you place an item in the cache, you need to 
 specify the number of seconds for which the value should be cached:
+**P.S: all expiry values are in seconds. If not provided, the key will be stored permenantely**
 
 ```
-const stored = async cache.put('key', value, seconds);
+const stored = async cache.put('key', value, expiry);
 ```
 The method will return true if the item is stored to the cache
 
@@ -91,11 +111,9 @@ specified fields already existing in the hash. If key does not exist, a new key 
 cache.multiset('key', { field1: 'value1', field2: 'value2' }, expiry);
 ```
 
-P.S: all expiry values are in seconds
-
 ### Removing Items From The Cache
-You may remove items from the cache using the forget method:
+You may remove items from the cache using the destroy method:
 
 ```
-cache.forget('key');
+cache.destroy('key');
 ```
