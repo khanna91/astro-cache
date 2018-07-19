@@ -7,8 +7,8 @@ const Redis = require('ioredis');
 const _ = require('lodash');
 
 let redisClient = {};
-const configuration = {
-  cachePort: 6379,
+let configuration = {
+  cachePort: 1234,
   cacheHost: '127.0.0.1',
   cachePassword: undefined
 };
@@ -17,28 +17,14 @@ const configuration = {
  * This function is used to setup the configuration for cache store
  * @param {*} config
  */
-const configure = (config) => {
+const configure = (config = {}) => {
   // Check for env variables first then user configuration
   // set cacheHost
-  if (process.env.cacheHost) {
-    configuration.cacheHost = process.env.cacheHost;
-  } else if (config && config.cacheHost) {
-    configuration.cacheHost = config.cacheHost;
-  }
+  const cacheHost = process.env.cacheHost || config.cacheHost || configuration.cacheHost;
+  const cachePort = process.env.cachePort || config.cachePort || configuration.cachePort;
+  const cachePassword = process.env.cachePassword || config.cachePassword || config.cachePassword;
 
-  // set cachePort
-  if (process.env.cachePort) {
-    configuration.cachePort = process.env.cachePort;
-  } else if (config && config.cachePort) {
-    configuration.cachePort = config.cachePort;
-  }
-
-  // set cachePassword
-  if (process.env.cachePassword) {
-    configuration.cachePassword = process.env.cachePassword;
-  } else if (config && config.cachePassword) {
-    configuration.cachePassword = config.cachePassword;
-  }
+  configuration = Object.assign(configuration, { cacheHost, cachePort, cachePassword });
 };
 
 /**

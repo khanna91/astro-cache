@@ -5,7 +5,9 @@ const service = require('./index');
 
 describe('Service - cache', () => {
   let sandbox;
-  service.build();
+  service.configure({
+    cachePort: 6379
+  });
   service.run();
 
   beforeEach(async () => {
@@ -13,7 +15,7 @@ describe('Service - cache', () => {
   });
 
   afterEach(() => sandbox.restore());
-
+  
   it('should put the value in cache', async () => {
     const value = await service.put('test', '123456');
     expect(value).to.be.true; // eslint-disable-line
@@ -63,7 +65,7 @@ describe('Service - cache', () => {
 
   it('should get value from cache and delete it', async () => {
     await service.put('tempNew', 'newValue');
-    const value = await service.pull('tempNew');
+    const value = await service.pop('tempNew');
     expect(value).to.be.equal('newValue');
     const keyExists = await service.has('tempNew');
     expect(keyExists).to.be.false; // eslint-disable-line
