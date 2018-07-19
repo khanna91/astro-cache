@@ -1,0 +1,20 @@
+{
+  "name": "astro-cache",
+  "version": "1.0.0",
+  "description": "Cache wrapper to use ioredis conviently\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=test mocha --exit index.spec.js"
+  },
+  "author": "Rahul Khanna",
+  "license": "ISC",
+  "dependencies": {
+    "ioredis": "^3.2.2",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "sinon": "^6.1.3"
+  }
+}
