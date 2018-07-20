@@ -6,8 +6,22 @@
   "scripts": {
     "test": "cross-env NODE_ENV=test mocha --exit index.spec.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khanna91/astro-cache.git"
+  },
+  "keywords": [
+    "cache-orm",
+    "ioredis",
+    "redis",
+    "node",
+    "nodejs",
+    "express",
+    "expressjs",
+    "astro"
+  ],
   "author": "Rahul Khanna",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "ioredis": "^3.2.2",
     "lodash": "^4.17.10"
