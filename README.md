@@ -13,8 +13,27 @@ cachePassword // optional
 
 For cluster, give the multiple host comma seperated.
 
+Or you can provide these, configuration in configure function
+
+**This library will first check env variables, then user provided configuration. If both not found it will
+use default values**
+
 ## Cache Usage
+```
 const cache = require('astro-cache');
+
+cache.configure();
+
+OR
+-----
+
+cache.configure({
+  cacheHost: '127.0.0.1',
+  cachePort: 6379
+});
+
+cache.run();
+```
 
 ### Retrieving Items From The Cache
 The get method on the Cache is used to retrieve items from the cache.
@@ -44,11 +63,11 @@ If the item does not exist in the cache, the Closure passed to the remember meth
 result will be placed in the cache with ttl of seconds passed as second argument.
 
 #### Retrieve & Delete
-If you need to retrieve an item from the cache and then delete the item, you may use the pull method. 
+If you need to retrieve an item from the cache and then delete the item, you may use the pop method. 
 Like the get method, null will be returned if the item does not exist in the cache:
 
 ```
-const value = async cache.pull('key');
+const value = async cache.pop('key');
 ```
 
 #### Retrive fields associated with particular key
@@ -61,9 +80,10 @@ const values = async cache.multiget('key', [...fieldKey (String)]);
 ### Storing data in cache
 You may use the put method to store items in the cache. When you place an item in the cache, you need to 
 specify the number of seconds for which the value should be cached:
+**P.S: all expiry values are in seconds. If not provided, the key will be stored permenantely**
 
 ```
-const stored = async cache.put('key', value, seconds);
+const stored = async cache.put('key', value, expiry);
 ```
 The method will return true if the item is stored to the cache
 
@@ -75,14 +95,6 @@ The method will return true if the item is actually added to the cache. Otherwis
 const stored = async cache.add('key', value, expiry);
 ```
 
-#### Storing Items Forever
-The forever method may be used to store an item in the cache permanently. Since these items will not expire, 
-they must be manually removed from the cache using the forget method:
-
-```
-cache.forever('key', value);
-```
-
 #### Store Set under particular key
 Sets the specified fields to their respective values in the hash stored at key. This command overwrites any 
 specified fields already existing in the hash. If key does not exist, a new key holding a hash is created.
@@ -91,11 +103,9 @@ specified fields already existing in the hash. If key does not exist, a new key 
 cache.multiset('key', { field1: 'value1', field2: 'value2' }, expiry);
 ```
 
-P.S: all expiry values are in seconds
-
 ### Removing Items From The Cache
-You may remove items from the cache using the forget method:
+You may remove items from the cache using the destroy method:
 
 ```
-cache.forget('key');
+cache.destroy('key');
 ```

@@ -5,13 +5,17 @@ const service = require('./index');
 
 describe('Service - cache', () => {
   let sandbox;
+  service.configure({
+    cachePort: 6379
+  });
+  service.run();
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
   });
 
   afterEach(() => sandbox.restore());
-
+  
   it('should put the value in cache', async () => {
     const value = await service.put('test', '123456');
     expect(value).to.be.true; // eslint-disable-line
@@ -46,31 +50,22 @@ describe('Service - cache', () => {
   });
 
   it('should store value in cache permanently', async () => {
-    await service.forever('testForever', 'Permanent');
+    await service.put('testForever', 'Permanent');
     const value = await service.get('testForever');
     expect(value).to.be.equal('Permanent');
-    const ttl = await service._client.ttl('testForever');
+    const ttl = await service._client().ttl('testForever');
     expect(ttl).to.be.equal(-1);
   });
 
   it('should remove the value from cache', async () => {
-    await service.forget('testForever');
+    await service.destroy('testForever');
     const value = await service.has('testForever');
     expect(value).to.be.false; // eslint-disable-line
   });
 
-  it('should not add value in cache since key already exist', async () => {
-    const value = await service.add('test', 'newValue', 10);
-    expect(value).to.be.false; // eslint-disable-line
-  });
-
-  it('should add value in cache since key doesn\'t exist', async () => {
-    const value = await service.add('tempNew', 'newValue');
-    expect(value).to.be.true; // eslint-disable-line
-  });
-
   it('should get value from cache and delete it', async () => {
-    const value = await service.pull('tempNew');
+    await service.put('tempNew', 'newValue');
+    const value = await service.pop('tempNew');
     expect(value).to.be.equal('newValue');
     const keyExists = await service.has('tempNew');
     expect(keyExists).to.be.false; // eslint-disable-line
@@ -100,7 +95,7 @@ describe('Service - cache', () => {
         reject();
       });
     });
-    expect(value).to.be.null; // eslint-disable-line
+    expect(value).to.be.undefined; // eslint-disable-line
     const keyExists = await service.has('tempPromiseFail');
     expect(keyExists).to.be.false; // eslint-disable-line
   });
@@ -121,6 +116,6 @@ describe('Service - cache', () => {
   });
 
   it('should remove the cache (test)', async () => {
-    await service.forget('test');
+    await service.destroy('test');
   });
 });
