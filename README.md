@@ -20,7 +20,7 @@ use default values**
 
 ## Cache Usage
 ```
-const cache = require('astro-cache');
+const cache = require('@astro-my/cache');
 
 cache.configure();
 
