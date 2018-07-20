@@ -1,5 +1,5 @@
 {
-  "name": "astro-cache",
+  "name": "@astro-my/cache",
   "version": "1.0.0",
   "description": "Cache wrapper to use ioredis conviently\"",
   "main": "index.js",
