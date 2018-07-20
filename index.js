@@ -227,10 +227,10 @@ const pop = async (key) => {
  */
 const multiget = async (key, fields) => {
   try {
-    if (!validateKey(set)) {
+    if (!validateKey(key)) {
       return {};
     }
-    const result = await redisClient.hmget(set, keys);
+    const result = await redisClient.hmget(key, fields);
     return result;
   } catch (err) {
     return undefined;
