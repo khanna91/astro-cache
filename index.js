@@ -8,7 +8,7 @@ const _ = require('lodash');
 
 let redisClient = {};
 let configuration = {
-  cachePort: 1234,
+  cachePort: 6379,
   cacheHost: '127.0.0.1',
   cachePassword: undefined
 };
