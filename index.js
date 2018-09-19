@@ -37,7 +37,7 @@ const run = () => {
     const clusterNodes = [];
     clusterNodes.push({ host: configuration.cacheHost, port: configuration.cachePort });
     clusterNodes.push({ host: configuration.cacheHost, port: configuration.cachePort });
-    
+    console.log('==== > clusters info', clusterNodes)
     redisClient = new Redis(
       clusterNodes,
       {
