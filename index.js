@@ -11,7 +11,7 @@ let configuration = {
   cachePort: 6379,
   cacheHost: '127.0.0.1',
   cachePassword: undefined,
-  cacheCluster: false
+  cacheCluster: 0
 };
 
 /**
@@ -32,7 +32,7 @@ const configure = (config = {}) => {
  * This function is used to run the cache store
  */
 const run = () => {
-  if (configuration.cacheCluster && configuration.cacheCluster === true) {
+  if (configuration.cacheCluster && Number(configuration.cacheCluster) === 1) {
     // means cluster needs to be setup
     const clusterNodes = [];
     clusterNodes.push({ host: configuration.cacheHost, port: configuration.cachePort });

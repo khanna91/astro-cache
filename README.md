@@ -9,6 +9,8 @@ cacheHost // required, default to 127.0.0.1,
 
 cachePort // required, default to 6379
 
+cacheCluster // optional, 1 - true, 0 - false
+
 cachePassword // optional
 
 For cluster, give the multiple host comma seperated.
