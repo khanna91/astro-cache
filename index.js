@@ -10,7 +10,8 @@ let redisClient = {};
 let configuration = {
   cachePort: 6379,
   cacheHost: '127.0.0.1',
-  cachePassword: undefined
+  cachePassword: undefined,
+  cacheCluster: false
 };
 
 /**
@@ -21,28 +22,22 @@ const configure = (config = {}) => {
   // Check for env variables first then user configuration
   const cacheHost = process.env.cacheHost || config.cacheHost || configuration.cacheHost;
   const cachePort = process.env.cachePort || config.cachePort || configuration.cachePort;
-  const cachePassword = process.env.cachePassword || config.cachePassword || config.cachePassword;
+  const cachePassword = process.env.cachePassword || config.cachePassword || configuration.cachePassword;
+  const cacheCluster = process.env.cacheCluster || config.cacheCluster || configuration.cacheCluster
 
-  configuration = Object.assign(configuration, { cacheHost, cachePort, cachePassword });
+  configuration = Object.assign(configuration, { cacheHost, cachePort, cachePassword, cacheCluster });
 };
 
 /**
  * This function is used to run the cache store
  */
 const run = () => {
-  if (configuration.cacheHost.indexOf(',') < 1) {
-    // normal redis setup
-    redisClient = new Redis({
-      port: configuration.cachePort,
-      host: configuration.cacheHost,
-      showFriendlyErrorStack: true
-    });
-  } else {
+  if (configuration.cacheCluster && configuration.cacheCluster === true) {
     // means cluster needs to be setup
     const clusterNodes = [];
-    process.env.cacheHost.split(',').forEach((host) => {
-      clusterNodes.push({ host, port: process.env.cachePort });
-    });
+    clusterNodes.push({ host: configuration.cacheHost, port: configuration.cachePort });
+    clusterNodes.push({ host: configuration.cacheHost, port: configuration.cachePort });
+    
     redisClient = new Redis(
       clusterNodes,
       {
@@ -53,6 +48,13 @@ const run = () => {
         }
       }
     );
+  } else {
+    // normal redis setup
+    redisClient = new Redis({
+      port: configuration.cachePort,
+      host: configuration.cacheHost,
+      showFriendlyErrorStack: true
+    });
   }
 
   if (configuration.cachePassword) {

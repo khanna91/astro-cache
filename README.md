@@ -88,11 +88,11 @@ const stored = async cache.put('key', value, expiry);
 The method will return true if the item is stored to the cache
 
 #### Store If Not Present
-The add method will only add the item to the cache if it does not already exist in the cache store. 
+The put method will only add the item to the cache if it does not already exist in the cache store. 
 The method will return true if the item is actually added to the cache. Otherwise, the method will return false:
 
 ```
-const stored = async cache.add('key', value, expiry);
+const stored = async cache.put('key', value, expiry);
 ```
 
 #### Store Set under particular key
